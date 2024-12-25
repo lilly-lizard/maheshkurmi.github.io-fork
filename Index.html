@@ -1,237 +1,145 @@
 <!doctype html>
 <html>
-<head>
-    <title>Huygen's Principle</title>
-    <style>
-        body {
-            background: white;
-            color: #323232;
-            font-weight: 300;
-            height: 100vh;
-            margin: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            font-family: Helvetica neue, roboto;
-        }
-
-        img {
-            width: 56px;
-            height: 48px;
-        }
-
-        h1 {
-            font-weight: 200;
-            font-style: 26px;
-            margin: 10px;
-        }
-    </style>
-</head>
-
 <body>
-<div id="canvasdiv" class="container" align="center">
-    <canvas id="myCanvas" style="border: 1px solid #c3c3c3;" width="900px" height="480px">
-        Your browser does not support the HTML5 canvas tag.
-    </canvas>
-    <div style="padding-left:20px">
-        <b>Source: </b>
-        <label class="white"><input id="chkSrc1" onchange="chkSrc1_onChange(null,this.checked)" type="checkbox" checked>1</label>
-        &nbsp;
-        <label class="white"><input id="chkSrc2" onchange="chkSrc2_onChange(null,this.checked)" type="checkbox" checked>2</label>
-
-        <br>
-
-        <span class="white">Check to make sources are out of phase: </span>
-        <label class="white"><input id="chkPhase" onchange="chkPhase_onChange(null,this.checked)" type="checkbox" checked>1</label>
-        <br>
-
-        <span class="white">Check to bring sources at center: </span>
-        <label class="white"><input id="chkSrcLoc" onchange="chkSrcLoc_onChange(null,this.checked)" type="checkbox" checked>1</label>
-        <br>
-    </div>
-
-    <div id="slider1"><b>WaveLength </b>30 <input id="a" max="400" min="30" step="5" type="range"
-                                                  oninput="a_onChange(this,this.value);"
-                                                  onchange="a_onChange(this,this.value);" value="80"> 400
-    </div>
-    <div id="slider2"><b>Frequency </b>1 <input id="b" max="8" min="1" step="0.5" type="range"
-                                                oninput="b_onChange(this,this.value);"
-                                                onchange="b_onChange(this,this.value);" value="3"> 8
-    </div>
-
-    <div id="slider3"><b>Amplitude </b>1 <input id="c" max="40" min="1" step="0.5" type="range"
-                                                oninput="c_onChange(this,this.value);"
-                                                onchange="c_onChange(this,this.value);" value="10"> 10
-    </div>
-
-    <div id="slider4"><b>Separation </b>10 <input id="d" max="500" min="20" step="5" type="range"
-                                                  oninput="d_onChange(this,this.value);"
-                                                  onchange="d_onChange(this,this.value);" value="120"> 500
-    </div>
-
-</div>
-
-<script type='text/javascript'>
-    // XYZPoint
-
-
-
-    const canvas = document.getElementById('myCanvas');
-    const ctx = canvas.getContext('2d');
-    var isDragging = false;
-
-
-    canvas.addEventListener('mousewheel', mouseWheelMoved);
-    canvas.addEventListener('mousemove', mouseDragged);
-    canvas.addEventListener('mousedown', mousePressed);
-    canvas.addEventListener('mouseup', mouseReleased)
-    canvas.addEventListener('touchstart', myTouchStart, false); // touch handler for iPhones, iPads, and Androids
-    canvas.addEventListener('touchmove', myTouchMove, false); // touch handler for iPhones, iPads, and Androids
-    canvas.addEventListener('touchend', myTouchEnd, false); // touch handler for iPhones, iPads, and Androids
-    window.addEventListener('keydown', onKeyEvent, false);
-
-
-
-    function myTouchMove(event) {
-        let touch = event.touches[0];
-        let mouseEvent = new MouseEvent('mousemove', {
-            clientX: touch.clientX,
-            clientY: touch.clientY,
-        });
-        canvas.dispatchEvent(mouseEvent);
-    }
-
-    function myTouchStart(event) {
-        event.preventDefault();
-        let touch = event.touches[0]
-        let mouseEvent = new MouseEvent('mousedown', {
-            clientX: touch.clientX,
-            clientY: touch.clientY,
-        });
-        canvas.dispatchEvent(mouseEvent);
-    }
-
-    function myTouchEnd(event) {
-        event.preventDefault();
-        let mouseEvent = new MouseEvent('mouseup', {
-            clientX: touch.clientX,
-            clientY: touch.clientY,
-        });
-        canvas.dispatchEvent(mouseEvent);
-    }
-
-    function getTouchPos(event) {
-        event.preventDefault();
-        let rect = canvas.getBoundingClientRect();
-        return {
-            x: event.touches[0].clientX - rect.left,
-            y: event.touches[0].clientY - rect.top,
-        };
-    }
-
-    function getMousePos(event) {
-        let rect = canvas.getBoundingClientRect();
-        return {
-            x: event.clientX - rect.left,
-            y: event.clientY - rect.top,
-        };
-        //return {
-        //x: event.pageX - canvasdiv.offsetLeft ,
-        //y: event.pageY - canvasdiv.offsetTop
-        //};
-    }
-
-    function mousePressed(me) {
-        let m = getMousePos(me);
-        mx = m.x;
-        my = m.y;
-        isDragging= true;//ctx.isPointInPath(vernier.path, mx, my) //((mx-ox*scale)/scale, (my-oy*scale)/scale);
-        updateView()
-    }
-
-    function mouseReleased(me) {
-        isDragging = false;
-        updateView()
-    }
-
-    function mouseWheelMoved(me) {
-        me.preventDefault();
-        let scroll=me.wheelDelta>0?2:-2;
-        rho+=scroll;
-        updateView()
-    }
-
-    function mouseDragged(me) {
-        me.preventDefault();
-        if (!isDragging) return;
-        let dx, dy;
-        let m = getMousePos(me);
-        dx = (m.x - mx) ;
-        dy = (m.y - my) ;
-        mx = m.x;
-        my = m.y;
-        theta+=dx/50;
-        phi-=dy/50;
-        updateView();
-    }
-
-
-    function onKeyEvent(e) {
-        e.preventDefault;
-        if (e.keyCode == 37) {
-            vernier.translate(-1);
-
-            return true;
-        } else if (e.keyCode == 39) {
-            vernier.translate(1);
-
-            return true;
-        }
-        updateView()
-    }
-
-
-
-
-
-    function b_onChange(widget,value){
-        //setFrequency(value);
-        //setFrequency(value);
-    }
-    function c_onChange(widget,value){
-
-
-        function d_onChange(widget,value){
-
-        }
-
-        function chkSrc1_onChange(widget,value)
-        {
-            //amplitudeS1 = value ? Number(document.getElementById("c").value): 0;
-        }
-
-
-        function chkSrc2_onChange(widget,value)
-        {
-            // amplitudeS2 = value ? Number(document.getElementById("c").value): 0;
-        }
-
-
-        function chkPhase_onChange(widget,value)
-        {
-            //phaseDifference = value?lambda / 2:0;
-        }
-
-
-
-        function chkSrcLoc_onChange(widget,value)
-        {
-
-        }
-
-
-
-</script>
+    <a href="/charge transfer/induction.html">./charge transfer/induction.html</a><br>
+    <a href="/charge transfer/electroscope.html">./charge transfer/electroscope.html</a><br>
+    <a href="/Current/resistance_calc.html">./Current/resistance_calc.html</a><br>
+    <a href="/Current/galvtovoltmeter.html">./Current/galvtovoltmeter.html</a><br>
+    <a href="/Current/current-flow.html">./Current/current-flow.html</a><br>
+    <a href="/Current/galvtoammeter.html">./Current/galvtoammeter.html</a><br>
+    <a href="/Current/meterbridge.html">./Current/meterbridge.html</a><br>
+    <a href="/Current/LC_circuit.html">./Current/LC_circuit.html</a><br>
+    <a href="/Current/conduction.html">./Current/conduction.html</a><br>
+    <a href="/Current/pobox.html">./Current/pobox.html</a><br>
+    <a href="/coulomb law/coulomb.html">./coulomb law/coulomb.html</a><br>
+    <a href="/flash/Cathode Ray Tube.html">./flash/Cathode Ray Tube.html</a><br>
+    <a href="/flash/bohr_model.html">./flash/bohr_model.html</a><br>
+    <a href="/flash/bohrmodel.html">./flash/bohrmodel.html</a><br>
+    <a href="/vdantu test sim es5/photoelectric/photoelectric.html">./vdantu test sim es5/photoelectric/photoelectric.html</a><br>
+    <a href="/vdantu test sim es5/earth_field/earth_magnetic_lines.html">./vdantu test sim es5/earth_field/earth_magnetic_lines.html</a><br>
+    <a href="/vdantu test sim es5/earth_field/testcube.html">./vdantu test sim es5/earth_field/testcube.html</a><br>
+    <a href="/vdantu test sim es5/simloader.html">./vdantu test sim es5/simloader.html</a><br>
+    <a href="/vdantu test sim es5/rolling_on_earth/rolling_on_plane.html">./vdantu test sim es5/rolling_on_earth/rolling_on_plane.html</a><br>
+    <a href="/vdantu test sim es5/micrometer/micrometer.html">./vdantu test sim es5/micrometer/micrometer.html</a><br>
+    <a href="/scalarfield/index.html">./scalarfield/index.html</a><br>
+    <a href="/scalarfield/contour.html">./scalarfield/contour.html</a><br>
+    <a href="/Simphy_Runtime/index.html">./Simphy_Runtime/index.html</a><br>
+    <a href="/geom/index.html">./geom/index.html</a><br>
+    <a href="/geom/index2.html">./geom/index2.html</a><br>
+    <a href="/liquidfunjs/box2d_ts/docs/testbed/index.html">./liquidfunjs/box2d_ts/docs/testbed/index.html</a><br>
+    <a href="/liquidfunjs/box2d_ts/docs/index.html">./liquidfunjs/box2d_ts/docs/index.html</a><br>
+    <a href="/liquidfunjs/box2d_ts/docs/benchmark/index.html">./liquidfunjs/box2d_ts/docs/benchmark/index.html</a><br>
+    <a href="/liquidfunjs/box2d_ts/packages/testbed/src/ui/index.html">./liquidfunjs/box2d_ts/packages/testbed/src/ui/index.html</a><br>
+    <a href="/liquidfunjs/box2d_ts/packages/benchmark/src/webapp/index.html">./liquidfunjs/box2d_ts/packages/benchmark/src/webapp/index.html</a><br>
+    <a href="/liquidfunjs/index.html">./liquidfunjs/index.html</a><br>
+    <a href="/liquidfunjs/liquidfun.js-demo-master/index.html">./liquidfunjs/liquidfun.js-demo-master/index.html</a><br>
+    <a href="/Magnetism/multiple_chaeges_in_field.html">./Magnetism/multiple_chaeges_in_field.html</a><br>
+    <a href="/Magnetism/LC_Oscillations.html">./Magnetism/LC_Oscillations.html</a><br>
+    <a href="/Magnetism/charge_3d.html">./Magnetism/charge_3d.html</a><br>
+    <a href="/Magnetism/single_charge_in_field.html">./Magnetism/single_charge_in_field.html</a><br>
+    <a href="/field lines/fieldlines.html">./field lines/fieldlines.html</a><br>
+    <a href="/Unit and Dimensions/index.html">./Unit and Dimensions/index.html</a><br>
+    <a href="/dist_gui_threejs_test/webapp/thinlet/index.html">./dist_gui_threejs_test/webapp/thinlet/index.html</a><br>
+    <a href="/dist_gui_threejs_test/webapp/index.html">./dist_gui_threejs_test/webapp/index.html</a><br>
+    <a href="/SHM/pendulum.html">./SHM/pendulum.html</a><br>
+    <a href="/dist_gui/webapp/thinlet/index.html">./dist_gui/webapp/thinlet/index.html</a><br>
+    <a href="/dist_gui/webapp/index.html">./dist_gui/webapp/index.html</a><br>
+    <a href="/rayoptics/ideal_mirror.html">./rayoptics/ideal_mirror.html</a><br>
+    <a href="/rayoptics/simple_microscope.html">./rayoptics/simple_microscope.html</a><br>
+    <a href="/rayoptics/camera.html">./rayoptics/camera.html</a><br>
+    <a href="/rayoptics/eyedefects.html">./rayoptics/eyedefects.html</a><br>
+    <a href="/rayoptics/opticalbench.html">./rayoptics/opticalbench.html</a><br>
+    <a href="/rayoptics/ideal_lens.html">./rayoptics/ideal_lens.html</a><br>
+    <a href="/rayoptics/simulator/index.html">./rayoptics/simulator/index.html</a><br>
+    <a href="/serpent/war/com.shikhar.games.serpent.GwtDefinition/BECCADC958B2791B7AB61794E95EEFCF.cache.html">./serpent/war/com.shikhar.games.serpent.GwtDefinition/BECCADC958B2791B7AB61794E95EEFCF.cache.html</a><br>
+    <a href="/serpent/war/com.shikhar.games.serpent.GwtDefinition/77F4F4E2DBFE6D13D58A1A73940AF797.cache.html">./serpent/war/com.shikhar.games.serpent.GwtDefinition/77F4F4E2DBFE6D13D58A1A73940AF797.cache.html</a><br>
+    <a href="/serpent/war/com.shikhar.games.serpent.GwtDefinition/292A1CCDD5F13FDAA09ED326F5F3C62E.cache.html">./serpent/war/com.shikhar.games.serpent.GwtDefinition/292A1CCDD5F13FDAA09ED326F5F3C62E.cache.html</a><br>
+    <a href="/experiments/zim.html">./experiments/zim.html</a><br>
+    <a href="/experiments/fieldlines.html">./experiments/fieldlines.html</a><br>
+    <a href="/experiments/Spring Simulation.html">./experiments/Spring Simulation.html</a><br>
+    <a href="/experiments/homopolar_motor.html">./experiments/homopolar_motor.html</a><br>
+    <a href="/experiments/micrometer.html">./experiments/micrometer.html</a><br>
+    <a href="/experiments/drawRulers.html">./experiments/drawRulers.html</a><br>
+    <a href="/experiments/searles_apparatus.html">./experiments/searles_apparatus.html</a><br>
+    <a href="/experiments/paper_test.html">./experiments/paper_test.html</a><br>
+    <a href="/experiments/vernier_calliper.html">./experiments/vernier_calliper.html</a><br>
+    <a href="/experiments/babylon1.html">./experiments/babylon1.html</a><br>
+    <a href="/experiments/ripples.html">./experiments/ripples.html</a><br>
+    <a href="/experiments/earth_magnetic_lines.html">./experiments/earth_magnetic_lines.html</a><br>
+    <a href="/experiments/capacitor.html">./experiments/capacitor.html</a><br>
+    <a href="/experiments/induction.html">./experiments/induction.html</a><br>
+    <a href="/experiments/resonance_colum.html">./experiments/resonance_colum.html</a><br>
+    <a href="/experiments/capacitor_1.html">./experiments/capacitor_1.html</a><br>
+    <a href="/experiments/conductor.html">./experiments/conductor.html</a><br>
+    <a href="/experiments/conductor_vs_insulator.html">./experiments/conductor_vs_insulator.html</a><br>
+    <a href="/experiments/vernier.html">./experiments/vernier.html</a><br>
+    <a href="/experiments/photoelectric.html">./experiments/photoelectric.html</a><br>
+    <a href="/experiments/test.html">./experiments/test.html</a><br>
+    <a href="/experiments/microphone.html">./experiments/microphone.html</a><br>
+    <a href="/experiments/screwgauge.html">./experiments/screwgauge.html</a><br>
+    <a href="/experiments/DC_motor.html">./experiments/DC_motor.html</a><br>
+    <a href="/experiments/double_slit.html">./experiments/double_slit.html</a><br>
+    <a href="/experiments/conductor_shells.html">./experiments/conductor_shells.html</a><br>
+    <a href="/experiments/rolling_on_plane.html">./experiments/rolling_on_plane.html</a><br>
+    <a href="/experiments/spectrum_analyzer.html">./experiments/spectrum_analyzer.html</a><br>
+    <a href="/experiments/electroscope.html">./experiments/electroscope.html</a><br>
+    <a href="/experiments/Van De Graph.html">./experiments/Van De Graph.html</a><br>
+    <a href="/experiments/ac_generator.html">./experiments/ac_generator.html</a><br>
+    <a href="/EfieldLines/dipole_field.html">./EfieldLines/dipole_field.html</a><br>
+    <a href="/EfieldLines/chargeEVgraphs.html">./EfieldLines/chargeEVgraphs.html</a><br>
+    <a href="/EfieldLines/lines2d.html">./EfieldLines/lines2d.html</a><br>
+    <a href="/EfieldLines/index.html">./EfieldLines/index.html</a><br>
+    <a href="/EfieldLines/testbackup.html">./EfieldLines/testbackup.html</a><br>
+    <a href="/EfieldLines/vfield.html">./EfieldLines/vfield.html</a><br>
+    <a href="/Charge in Field/index.html">./Charge in Field/index.html</a><br>
+    <a href="/Charge in Field/field_and_string.html">./Charge in Field/field_and_string.html</a><br>
+    <a href="/gausslaw/index.html">./gausslaw/index.html</a><br>
+    <a href="/huygen principle/index.html">./huygen principle/index.html</a><br>
+    <a href="/canvas_ui/GameMenu.html">./canvas_ui/GameMenu.html</a><br>
+    <a href="/canvas_ui/test_transform.html">./canvas_ui/test_transform.html</a><br>
+    <a href="/KTG/Avogadro law.html">./KTG/Avogadro law.html</a><br>
+    <a href="/KTG/Diffusion.html">./KTG/Diffusion.html</a><br>
+    <a href="/KTG/Charles_Law.html">./KTG/Charles_Law.html</a><br>
+    <a href="/KTG/CpandCv.html">./KTG/CpandCv.html</a><br>
+    <a href="/KTG/ideal_gas_maxwell.html">./KTG/ideal_gas_maxwell.html</a><br>
+    <a href="/KTG/Boyle_tube.html">./KTG/Boyle_tube.html</a><br>
+    <a href="/KTG/CarnotCycle.html">./KTG/CarnotCycle.html</a><br>
+    <a href="/KTG/Brownian_motion.html">./KTG/Brownian_motion.html</a><br>
+    <a href="/KTG/threephase_diagram.html">./KTG/threephase_diagram.html</a><br>
+    <a href="/KTG/PV_Diagram.html">./KTG/PV_Diagram.html</a><br>
+    <a href="/KTG/Boyles_Law.html">./KTG/Boyles_Law.html</a><br>
+    <a href="/KTG/Exampsion_process.html">./KTG/Exampsion_process.html</a><br>
+    <a href="/KTG/Otto_cycle.html">./KTG/Otto_cycle.html</a><br>
+    <a href="/KTG/gas.html">./KTG/gas.html</a><br>
+    <a href="/dist_simphy/webapp/index.html">./dist_simphy/webapp/index.html</a><br>
+    <a href="/dist_simphy/webapp/simphy/index.html">./dist_simphy/webapp/simphy/index.html</a><br>
+    <a href="/Significant Figures/index.html">./Significant Figures/index.html</a><br>
+    <a href="/cindyjs/flux.html">./cindyjs/flux.html</a><br>
+    <a href="/cindyjs/fourier.html">./cindyjs/fourier.html</a><br>
+    <a href="/cindyjs/testgl.html">./cindyjs/testgl.html</a><br>
+    <a href="/cindyjs/conics.html">./cindyjs/conics.html</a><br>
+    <a href="/cindyjs/optics.html">./cindyjs/optics.html</a><br>
+    <a href="/geogebra/em_waves.html">./geogebra/em_waves.html</a><br>
+    <a href="/geogebra/3D_Cross_Product.html">./geogebra/3D_Cross_Product.html</a><br>
+    <a href="/geogebra/rolling_polygon.html">./geogebra/rolling_polygon.html</a><br>
+    <a href="/geogebra/scalar_field.html">./geogebra/scalar_field.html</a><br>
+    <a href="/ripples2sources/ydse.html">./ripples2sources/ydse.html</a><br>
+    <a href="/ripples2sources/index.html">./ripples2sources/index.html</a><br>
+    <a href="/TestApp/index.html">./TestApp/index.html</a><br>
+    <a href="/TestApp/test.html">./TestApp/test.html</a><br>
+    <a href="/dist_canvas_ui/index.html">./dist_canvas_ui/index.html</a><br>
+    <a href="/wave optics/doppler.html">./wave optics/doppler.html</a><br>
+    <a href="/wave optics/diffraction_wave_pattern.html">./wave optics/diffraction_wave_pattern.html</a><br>
+    <a href="/wave optics/huygen_refraction.html">./wave optics/huygen_refraction.html</a><br>
+    <a href="/wave optics/polarisation1.html">./wave optics/polarisation1.html</a><br>
+    <a href="/wave optics/polarisation2.html">./wave optics/polarisation2.html</a><br>
+    <a href="/wave optics/huygen.html">./wave optics/huygen.html</a><br>
+    <a href="/wave optics/polarisation3.html">./wave optics/polarisation3.html</a><br>
+    <a href="/wave optics/singleslit.html">./wave optics/singleslit.html</a><br>
+    <a href="/wave optics/mirror_time_role.html">./wave optics/mirror_time_role.html</a><br>
+    <a href="/wave optics/reflection_hugen.html">./wave optics/reflection_hugen.html</a><br>
+    <a href="/wave optics/fermat.html">./wave optics/fermat.html</a><br>
+    <a href="/wave optics/lens_time_role.html">./wave optics/lens_time_role.html</a><br>
+    <a href="/wave optics/diffraction_grating.html">./wave optics/diffraction_grating.html</a><br>
 </body>
 </html>
